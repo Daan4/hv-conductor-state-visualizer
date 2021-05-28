@@ -1,5 +1,5 @@
 [package]
-name = "hv-conductor-state-visualizer"
+name = "hvcv"
 version = "0.1.0"
 authors = ["Daan Lubbers (Daan4@users.noreply.github.com)"]
 edition = "2018"
