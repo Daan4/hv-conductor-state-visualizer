@@ -2,7 +2,6 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use super::component::*;
-use super::terminal::Terminal;
 
 pub struct Node {
     name: &'static str,
@@ -21,9 +20,26 @@ impl Node {
         self.name
     }
 
+    pub fn add_component(&self, c: Rc<dyn Component>) -> Result<(), String> {
+        let index = self.children.borrow().iter().position(|x| Rc::ptr_eq(x, &c));
+        match index {
+            Some(_) => Err(format!("Failed to add component {} to node {} - Component already exists on node", c.name(), self.name())),
+            None => {
+                self.children.borrow_mut().push(c);
+                Ok(())
+            }
+        }
+    }
 
-    pub fn add_component(&self, c: Rc<dyn Component>, t: &Terminal) {
-        self.children.borrow_mut().push(c);
+    pub fn remove_component(&self, c: Rc<dyn Component>) -> Result<(), String> {
+        let index = self.children.borrow().iter().position(|x| Rc::ptr_eq(x, &c));
+        match index {
+            Some(i) => {
+                self.children.borrow_mut().remove(i);
+                Ok(())
+            },
+            None => Err(format!("Failed to remove component {} from node {} - Component does not exist on node", c.name(), self.name()))
+        }
     }
 }
 
@@ -37,28 +53,28 @@ mod tests {
         assert_eq!(n.name(), "node")
     }
 
-    /// Test adding components
     #[test]
-    fn node_add_component() {
+    fn node_component() {
         let n = Node::new("node");
 
         let cb: Rc<dyn Component> = Rc::new(CircuitBreaker::new("cb"));
         let ds: Rc<dyn Component> = Rc::new(Disconnector::new("ds"));
-        let es: Rc<dyn Component> = Rc::new(EarthingSwitch::new("es"));   
-        let vt: Rc<dyn Component> = Rc::new(VoltageTransformer::new("vt"));
-        let tf: Rc<dyn Component> = Rc::new(Transformer::new("tf"));
 
-        n.add_component(cb.clone(), cb.terminal(0).unwrap());
-        n.add_component(ds.clone(), ds.terminal(0).unwrap());
-        n.add_component(es.clone(), es.terminal(0).unwrap());
-        n.add_component(vt.clone(), vt.terminal(0).unwrap());
-        n.add_component(tf.clone(), tf.terminal(0).unwrap());
+        assert!(n.children.borrow().len() == 0);
+        n.add_component(cb.clone()).unwrap();
+        assert!(Rc::ptr_eq(&cb, &n.children.borrow()[0]));
+        assert!(n.add_component(cb.clone()).is_err());
+        assert!(n.children.borrow().len() == 1);
 
-        let c = n.children.borrow();
-        assert!(Rc::ptr_eq(&cb, &c[0]));
-        assert!(Rc::ptr_eq(&ds, &c[1]));
-        assert!(Rc::ptr_eq(&es, &c[2]));
-        assert!(Rc::ptr_eq(&vt, &c[3]));
-        assert!(Rc::ptr_eq(&tf, &c[4]));
+        n.add_component(ds.clone()).unwrap();
+        assert!(Rc::ptr_eq(&ds, &n.children.borrow()[1]));
+        assert!(n.children.borrow().len() == 2);
+
+        n.remove_component(cb.clone()).unwrap();
+        assert!(n.remove_component(cb).is_err());
+        assert!(Rc::ptr_eq(&ds, &n.children.borrow()[0]));
+        assert!(n.children.borrow().len() == 1);
+        n.remove_component(ds).unwrap();
+        assert!(n.children.borrow().len() == 0);
     }
 }
