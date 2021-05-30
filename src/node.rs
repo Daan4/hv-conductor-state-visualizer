@@ -1,19 +1,31 @@
-use super::component::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use super::component::*;
+use super::terminal::Terminal;
+
 pub struct Node {
+    name: &'static str,
     children: RefCell<Vec<Rc<dyn Component>>>,
 }
 
 impl Node {
-    fn new() -> Node {
+    pub fn new(name: Option<&'static str>) -> Node {
         Node {
+            name: match name {
+                Some(name) => name,
+                None => "node"
+            },
             children: RefCell::new(vec![]),
         }
     }
 
-    fn add_component(&self, c: Rc<dyn Component>) {
+    pub fn name(&self) -> &'static str {
+        self.name
+    }
+
+
+    pub fn add_component(&self, c: Rc<dyn Component>, t: &Terminal) {
         self.children.borrow_mut().push(c);
     }
 }
@@ -25,18 +37,18 @@ mod tests {
     /// Test adding components
     #[test]
     fn node_add_component() {
-        let n = Node::new();
-        let cb: Rc<dyn Component> = Rc::new(CircuitBreaker::new());
-        let ds: Rc<dyn Component> = Rc::new(Disconnector::new());
-        let es: Rc<dyn Component> = Rc::new(EarthingSwitch::new());   
-        let vt: Rc<dyn Component> = Rc::new(VoltageTransformer::new());
-        let tf: Rc<dyn Component> = Rc::new(Transformer::new());
+        let n = Node::new(None);
+        let cb: Rc<dyn Component> = Rc::new(CircuitBreaker::new(None));
+        let ds: Rc<dyn Component> = Rc::new(Disconnector::new(None));
+        let es: Rc<dyn Component> = Rc::new(EarthingSwitch::new(None));   
+        let vt: Rc<dyn Component> = Rc::new(VoltageTransformer::new(None));
+        let tf: Rc<dyn Component> = Rc::new(Transformer::new(None));
 
-        n.add_component(cb.clone());
-        n.add_component(ds.clone());
-        n.add_component(es.clone());
-        n.add_component(vt.clone());
-        n.add_component(tf.clone());
+        n.add_component(cb.clone(), cb.terminal(0).unwrap());
+        n.add_component(ds.clone(), ds.terminal(0).unwrap());
+        n.add_component(es.clone(), es.terminal(0).unwrap());
+        n.add_component(vt.clone(), vt.terminal(0).unwrap());
+        n.add_component(tf.clone(), tf.terminal(0).unwrap());
 
         let c = n.children.borrow();
         assert!(Rc::ptr_eq(&cb, &c[0]));
