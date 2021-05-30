@@ -1,6 +1,6 @@
-use super::components::*;
+use super::component::*;
 use super::node::*;
 
-pub struct Network() {
-
+pub struct Network {
+    
 }

@@ -1,7 +1,5 @@
-use super::node::Node;
-use std::rc::Weak;
-use std::rc::Rc;
-use std::cell::RefCell;
+use super::position::SwitchgearPosition;
+use super::terminal::Terminal;
 
 #[derive(Debug, PartialEq)]
 pub enum ComponentType {
@@ -11,42 +9,6 @@ pub enum ComponentType {
     Transformer,
 }
 
-/// Switchgear Position 
-#[derive(PartialEq)]
-enum SwitchPosition {
-    Open,
-    Close,
-}
-
-struct SwitchgearPosition {
-    position: SwitchPosition,
-}
-
-impl SwitchgearPosition {
-    fn new() -> SwitchgearPosition {
-        SwitchgearPosition {
-            position: SwitchPosition::Open,
-        }
-    }
-
-    fn is_closed(&self) -> bool {
-        self.position == SwitchPosition::Close
-    }
-
-    fn is_open(&self) -> bool {
-        self.position == SwitchPosition::Open
-    }
-
-    fn close(&mut self) {
-        self.position = SwitchPosition::Close;
-    }
-
-    fn open(&mut self) {
-        self.position = SwitchPosition::Open;
-    }
-}
-
-/// Trait for component type
 pub trait Component {
     fn component_type(&self) -> ComponentType;
 }
@@ -81,20 +43,8 @@ impl Component for Transformer {
     }
 }
 
-struct Terminal {
-    node: Option<Weak<Node>>,
-}
-
-impl Terminal {
-    fn new() -> Terminal {
-        Terminal {
-            node: None,
-        }
-    }
-}
-
 pub struct CircuitBreaker {
-    position: SwitchgearPosition,
+    pub position: SwitchgearPosition,
     terminals: [Terminal; 2],
 }
 
@@ -108,7 +58,7 @@ impl CircuitBreaker {
 }
 
 pub struct Disconnector {
-    position: SwitchgearPosition,
+    pub position: SwitchgearPosition,
     terminals: [Terminal; 2],
 }
 
@@ -122,7 +72,7 @@ impl Disconnector {
 }
 
 pub struct EarthingSwitch {
-    position: SwitchgearPosition,
+    pub position: SwitchgearPosition,
     terminals: [Terminal; 1],
 }
 
@@ -179,30 +129,5 @@ mod tests {
         assert_eq!(EarthingSwitch::new().terminals.len(), 1);
         assert_eq!(VoltageTransformer::new().terminals.len(), 1);
         assert_eq!(Transformer::new().terminals.len(), 3);
-    }
-
-    #[test]
-    fn switchgear_position() {
-        let mut cb = CircuitBreaker::new();
-        let mut ds = Disconnector::new();
-        let mut es = EarthingSwitch::new();
-
-        assert!(cb.position.is_open());
-        cb.position.close();
-        assert!(cb.position.is_closed());
-        cb.position.open();
-        assert!(cb.position.is_open());
-
-        assert!(ds.position.is_open());
-        ds.position.close();
-        assert!(ds.position.is_closed());
-        ds.position.open();
-        assert!(ds.position.is_open());
-
-        assert!(es.position.is_open());
-        es.position.close();
-        assert!(es.position.is_closed());
-        es.position.open();
-        assert!(es.position.is_open());
     }
 }
