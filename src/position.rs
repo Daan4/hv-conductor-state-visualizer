@@ -34,30 +34,19 @@ impl SwitchgearPosition {
 
 #[cfg(test)]
 mod tests {
-    use super::super::component::{CircuitBreaker, Disconnector, EarthingSwitch};
+    use super::*;
 
     #[test]
     fn switchgear_position() {
-        let mut cb = CircuitBreaker::new();
-        let mut ds = Disconnector::new();
-        let mut es = EarthingSwitch::new();
+        let mut pos = SwitchgearPosition::new();
 
-        assert!(cb.position.is_open());
-        cb.position.close();
-        assert!(cb.position.is_closed());
-        cb.position.open();
-        assert!(cb.position.is_open());
-
-        assert!(ds.position.is_open());
-        ds.position.close();
-        assert!(ds.position.is_closed());
-        ds.position.open();
-        assert!(ds.position.is_open());
-
-        assert!(es.position.is_open());
-        es.position.close();
-        assert!(es.position.is_closed());
-        es.position.open();
-        assert!(es.position.is_open());
+        assert!(pos.is_open());
+        assert!(!pos.is_closed());
+        pos.close();
+        assert!(!pos.is_open());
+        assert!(pos.is_closed());
+        pos.open();
+        assert!(pos.is_open());
+        assert!(!pos.is_closed());
     }
 }
