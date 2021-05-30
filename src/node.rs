@@ -10,12 +10,9 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new(name: Option<&'static str>) -> Node {
+    pub fn new(name: &'static str) -> Node {
         Node {
-            name: match name {
-                Some(name) => name,
-                None => "node"
-            },
+            name,
             children: RefCell::new(vec![]),
         }
     }
@@ -34,15 +31,22 @@ impl Node {
 mod tests {
     use super::*;
 
+    #[test]
+    fn node_name() {
+        let n = Node::new("node");
+        assert_eq!(n.name(), "node")
+    }
+
     /// Test adding components
     #[test]
     fn node_add_component() {
-        let n = Node::new(None);
-        let cb: Rc<dyn Component> = Rc::new(CircuitBreaker::new(None));
-        let ds: Rc<dyn Component> = Rc::new(Disconnector::new(None));
-        let es: Rc<dyn Component> = Rc::new(EarthingSwitch::new(None));   
-        let vt: Rc<dyn Component> = Rc::new(VoltageTransformer::new(None));
-        let tf: Rc<dyn Component> = Rc::new(Transformer::new(None));
+        let n = Node::new("node");
+
+        let cb: Rc<dyn Component> = Rc::new(CircuitBreaker::new("cb"));
+        let ds: Rc<dyn Component> = Rc::new(Disconnector::new("ds"));
+        let es: Rc<dyn Component> = Rc::new(EarthingSwitch::new("es"));   
+        let vt: Rc<dyn Component> = Rc::new(VoltageTransformer::new("vt"));
+        let tf: Rc<dyn Component> = Rc::new(Transformer::new("tf"));
 
         n.add_component(cb.clone(), cb.terminal(0).unwrap());
         n.add_component(ds.clone(), ds.terminal(0).unwrap());

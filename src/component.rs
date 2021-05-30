@@ -3,7 +3,7 @@ use super::terminal::Terminal;
 
 /// Component
 pub trait Component {
-    fn new(name: Option<&'static str>) -> Self where Self: Sized;
+    fn new(name: &'static str) -> Self where Self: Sized;
 
     fn r#type(&self) -> ComponentType;
     fn name(&self) -> &'static str;
@@ -27,12 +27,9 @@ pub struct CircuitBreaker {
 }
 
 impl Component for CircuitBreaker {
-    fn new(name: Option<&'static str>) -> CircuitBreaker {
+    fn new(name: &'static str) -> CircuitBreaker {
         CircuitBreaker { 
-            name: match name {
-            Some(name) => name,
-            None => "cb"
-        },  
+            name,
             position: SwitchgearPosition::new(), 
             terminals: [Terminal::new(), Terminal::new()],
         }
@@ -59,12 +56,9 @@ pub struct Disconnector {
 }
 
 impl Component for Disconnector {
-    fn new(name: Option<&'static str>) -> Disconnector {
+    fn new(name: &'static str) -> Disconnector {
         Disconnector { 
-            name: match name {
-            Some(name) => name,
-            None => "ds"
-        },  
+            name,
             position: SwitchgearPosition::new(), 
             terminals: [Terminal::new(), Terminal::new()],
         }
@@ -91,12 +85,9 @@ pub struct EarthingSwitch {
 }
 
 impl Component for EarthingSwitch {
-    fn new(name: Option<&'static str>) -> EarthingSwitch {
+    fn new(name: &'static str) -> EarthingSwitch {
         EarthingSwitch { 
-            name: match name {
-                Some(name) => name,
-                None => "es"
-            },
+            name,
             position: SwitchgearPosition::new(), 
             terminals: [Terminal::new(); 1],
         }
@@ -122,12 +113,9 @@ pub struct VoltageTransformer {
 }
 
 impl Component for VoltageTransformer {
-    fn new(name: Option<&'static str>) -> VoltageTransformer {
+    fn new(name: &'static str) -> VoltageTransformer {
         VoltageTransformer { 
-            name: match name {
-                Some(name) => name,
-                None => "vt"
-            },
+            name,
             terminals: [Terminal::new(); 1],
         }
     }
@@ -152,12 +140,9 @@ pub struct Transformer {
 }
 
 impl Component for Transformer {
-    fn new(name: Option<&'static str>) -> Transformer {
+    fn new(name: &'static str) -> Transformer {
         Transformer { 
-            name: match name {
-                Some(name) => name,
-                None => "tf"
-            },
+            name,
             terminals: [Terminal::new(), Terminal::new(), Terminal::new()],
         }
     }
@@ -178,22 +163,47 @@ impl Component for Transformer {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn create_test_components() -> (CircuitBreaker, Disconnector, EarthingSwitch, VoltageTransformer, Transformer) {
+        let cb = CircuitBreaker::new("cb");
+        let ds = Disconnector::new("ds");
+        let es = EarthingSwitch::new("es");
+        let vt = VoltageTransformer::new("vt");
+        let tf = Transformer::new("tf");
+
+        (cb, ds, es, vt, tf)
+    }
+
+    #[test]
+    fn component_names() {
+        let (cb, ds, es, vt, tf) = create_test_components();
+
+        assert_eq!(cb.name(), "cb");
+        assert_eq!(ds.name(), "ds");
+        assert_eq!(es.name(), "es");
+        assert_eq!(vt.name(), "vt");
+        assert_eq!(tf.name(), "tf");
+    }
     
     #[test]
     fn component_types() {
-        assert_eq!(CircuitBreaker::new(None).r#type(), ComponentType::Switch);
-        assert_eq!(Disconnector::new(None).r#type(), ComponentType::Switch);
-        assert_eq!(EarthingSwitch::new(None).r#type(), ComponentType::EarthingSwitch);
-        assert_eq!(VoltageTransformer::new(None).r#type(), ComponentType::Measurement);
-        assert_eq!(Transformer::new(None).r#type(), ComponentType::Transformer)
+        let (cb, ds, es, vt, tf) = create_test_components();
+
+        assert_eq!(cb.r#type(), ComponentType::Switch);
+        assert_eq!(ds.r#type(), ComponentType::Switch);
+        assert_eq!(es.r#type(), ComponentType::EarthingSwitch);
+        assert_eq!(vt.r#type(), ComponentType::Measurement);
+        assert_eq!(tf.r#type(), ComponentType::Transformer)
     }
 
     #[test]
     fn component_terminals() {
-        assert_eq!(CircuitBreaker::new(None).terminals.len(), 2);
-        assert_eq!(Disconnector::new(None).terminals.len(), 2);
-        assert_eq!(EarthingSwitch::new(None).terminals.len(), 1);
-        assert_eq!(VoltageTransformer::new(None).terminals.len(), 1);
-        assert_eq!(Transformer::new(None).terminals.len(), 3);
+        let (cb, ds, es, vt, tf) = create_test_components();
+
+        assert_eq!(cb.terminals.len(), 2);
+        assert_eq!(ds.terminals.len(), 2);
+        assert_eq!(es.terminals.len(), 1);
+        assert_eq!(vt.terminals.len(), 1);
+        assert_eq!(tf.terminals.len(), 3);
     }
 }

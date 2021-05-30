@@ -47,7 +47,7 @@ mod tests {
 
     #[test]
     fn terminal_connect() {
-        let n = Rc::new(Node::new(None));
+        let n = Rc::new(Node::new("node"));
         let mut t = Terminal::new();
 
         assert!(t.disconnect().is_err());
