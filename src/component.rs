@@ -1,3 +1,5 @@
+use std::fmt;
+
 use super::position::SwitchgearPosition;
 use super::terminal::Terminal;
 
@@ -10,10 +12,17 @@ pub trait Component {
     fn terminal(&self, index: usize) -> Result<&Terminal, String>;   
 }
 
+impl fmt::Display for dyn Component {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Component {} of type {:?}", self.name(), self.r#type())
+    }
+}
+
 /// Component Type
 #[derive(Debug, PartialEq)]
 pub enum ComponentType {
-    Switch,
+    CircuitBreaker,
+    Disconnector,
     EarthingSwitch,
     Measurement,
     Transformer,
@@ -36,7 +45,7 @@ impl Component for CircuitBreaker {
     }
 
     fn r#type(&self) -> ComponentType {
-        ComponentType::Switch
+        ComponentType::CircuitBreaker
     }
 
     fn name(&self) -> &'static str {
@@ -65,7 +74,7 @@ impl Component for Disconnector {
     }
 
     fn r#type(&self) -> ComponentType {
-        ComponentType::Switch
+        ComponentType::Disconnector
     }
 
     fn name(&self) -> &'static str {
@@ -189,8 +198,8 @@ mod tests {
     fn component_types() {
         let (cb, ds, es, vt, tf) = create_test_components();
 
-        assert_eq!(cb.r#type(), ComponentType::Switch);
-        assert_eq!(ds.r#type(), ComponentType::Switch);
+        assert_eq!(cb.r#type(), ComponentType::CircuitBreaker);
+        assert_eq!(ds.r#type(), ComponentType::Disconnector);
         assert_eq!(es.r#type(), ComponentType::EarthingSwitch);
         assert_eq!(vt.r#type(), ComponentType::Measurement);
         assert_eq!(tf.r#type(), ComponentType::Transformer)

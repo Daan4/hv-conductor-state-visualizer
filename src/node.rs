@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::fmt;
 
 use super::component::*;
 
@@ -40,6 +41,12 @@ impl Node {
             },
             None => Err(format!("Failed to remove component {} from node {} - Component does not exist on node", c.name(), self.name()))
         }
+    }
+}
+
+impl fmt::Display for Node {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Node {}", self.name())
     }
 }
 

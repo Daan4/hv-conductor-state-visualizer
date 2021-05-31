@@ -1,5 +1,6 @@
 use std::cell::RefCell;
-use std::rc::{Rc, Weak};
+use std::rc::Rc;
+use std::fmt;
 
 use super::component::*;
 use super::node::*;
@@ -94,6 +95,12 @@ impl Network {
 
     pub fn connect() -> Result<(), String> {
         Ok(())
+    }
+}
+
+impl fmt::Display for Network {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Network {}", self.name())
     }
 }
 
