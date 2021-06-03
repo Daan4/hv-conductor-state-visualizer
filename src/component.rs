@@ -1,4 +1,5 @@
 use std::fmt;
+use std::cell::RefCell;
 
 use super::position::SwitchgearPosition;
 use super::terminal::Terminal;
@@ -9,7 +10,7 @@ pub trait Component {
 
     fn r#type(&self) -> ComponentType;
     fn name(&self) -> &'static str;
-    fn terminal(&self, index: usize) -> Result<&Terminal, String>;   
+    fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String>;   
 }
 
 impl fmt::Display for dyn Component {
@@ -32,7 +33,7 @@ pub enum ComponentType {
 pub struct CircuitBreaker {
     name: &'static str,
     pub position: SwitchgearPosition,
-    terminals: [Terminal; 2],
+    terminals: [RefCell<Terminal>; 2],
 }
 
 impl Component for CircuitBreaker {
@@ -40,7 +41,7 @@ impl Component for CircuitBreaker {
         CircuitBreaker { 
             name,
             position: SwitchgearPosition::new(), 
-            terminals: [Terminal::new(), Terminal::new()],
+            terminals: [RefCell::new(Terminal::new()), RefCell::new(Terminal::new())],
         }
     }
 
@@ -52,8 +53,11 @@ impl Component for CircuitBreaker {
         self.name
     }
 
-    fn terminal(&self, index: usize) -> Result<&Terminal, String> {
-        Ok(&self.terminals[index])
+    fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String> {
+        match self.terminals.get(index) {
+            Some(t) => Ok(t),
+            None => Err(format!("Component {} of type {:?} does not have a terminal with index {}; it only has {} terminals", self.name, self.r#type(), index, self.terminals.len())),
+        }
     }
 }
 
@@ -61,7 +65,7 @@ impl Component for CircuitBreaker {
 pub struct Disconnector {
     name: &'static str,
     pub position: SwitchgearPosition,
-    terminals: [Terminal; 2],
+    terminals: [RefCell<Terminal>; 2],
 }
 
 impl Component for Disconnector {
@@ -69,7 +73,7 @@ impl Component for Disconnector {
         Disconnector { 
             name,
             position: SwitchgearPosition::new(), 
-            terminals: [Terminal::new(), Terminal::new()],
+            terminals: [RefCell::new(Terminal::new()), RefCell::new(Terminal::new())],
         }
     }
 
@@ -81,8 +85,11 @@ impl Component for Disconnector {
         self.name
     }
 
-    fn terminal(&self, index: usize) -> Result<&Terminal, String> {
-        Ok(&self.terminals[index])
+    fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String> {
+        match self.terminals.get(index) {
+            Some(t) => Ok(t),
+            None => Err(format!("Component {} of type {:?} does not have a terminal with index {}; it only has {} terminals", self.name, self.r#type(), index, self.terminals.len())),
+        }
     }
 }
 
@@ -90,7 +97,7 @@ impl Component for Disconnector {
 pub struct EarthingSwitch {
     name: &'static str,
     pub position: SwitchgearPosition,
-    terminals: [Terminal; 1],
+    terminals: [RefCell<Terminal>; 1],
 }
 
 impl Component for EarthingSwitch {
@@ -98,7 +105,7 @@ impl Component for EarthingSwitch {
         EarthingSwitch { 
             name,
             position: SwitchgearPosition::new(), 
-            terminals: [Terminal::new(); 1],
+            terminals: [RefCell::new(Terminal::new()); 1],
         }
     }
 
@@ -110,22 +117,25 @@ impl Component for EarthingSwitch {
         self.name
     }
 
-    fn terminal(&self, index: usize) -> Result<&Terminal, String> {
-        Ok(&self.terminals[index])
+    fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String> {
+        match self.terminals.get(index) {
+            Some(t) => Ok(t),
+            None => Err(format!("Component {} of type {:?} does not have a terminal with index {}; it only has {} terminals", self.name, self.r#type(), index, self.terminals.len())),
+        }
     }
 }
 
 /// Voltage Transformer
 pub struct VoltageTransformer {
     name: &'static str,
-    terminals: [Terminal; 1],
+    terminals: [RefCell<Terminal>; 1],
 }
 
 impl Component for VoltageTransformer {
     fn new(name: &'static str) -> VoltageTransformer {
         VoltageTransformer { 
             name,
-            terminals: [Terminal::new(); 1],
+            terminals: [RefCell::new(Terminal::new())],
         }
     }
 
@@ -137,22 +147,25 @@ impl Component for VoltageTransformer {
         self.name
     }
 
-    fn terminal(&self, index: usize) -> Result<&Terminal, String> {
-        Ok(&self.terminals[index])
+    fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String> {
+        match self.terminals.get(index) {
+            Some(t) => Ok(t),
+            None => Err(format!("Component {} of type {:?} does not have a terminal with index {}; it only has {} terminals", self.name, self.r#type(), index, self.terminals.len())),
+        }
     }
 }
 
 /// Transformer
 pub struct Transformer {
     name: &'static str,
-    terminals:[Terminal; 3],
+    terminals: [RefCell<Terminal>; 3],
 }
 
 impl Component for Transformer {
     fn new(name: &'static str) -> Transformer {
         Transformer { 
             name,
-            terminals: [Terminal::new(), Terminal::new(), Terminal::new()],
+            terminals: [RefCell::new(Terminal::new()), RefCell::new(Terminal::new()), RefCell::new(Terminal::new())],
         }
     }
 
@@ -164,8 +177,11 @@ impl Component for Transformer {
         self.name
     }
 
-    fn terminal(&self, index: usize) -> Result<&Terminal, String> {
-        Ok(&self.terminals[index])
+    fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String> {
+        match self.terminals.get(index) {
+            Some(t) => Ok(t),
+            None => Err(format!("Component {} of type {:?} does not have a terminal with index {}; it only has {} terminals", self.name, self.r#type(), index, self.terminals.len())),
+        }
     }
 }
 
@@ -214,5 +230,11 @@ mod tests {
         assert_eq!(es.terminals.len(), 1);
         assert_eq!(vt.terminals.len(), 1);
         assert_eq!(tf.terminals.len(), 3);
+
+        assert!(cb.terminal(2).is_err());
+        assert!(ds.terminal(2).is_err());
+        assert!(es.terminal(1).is_err());
+        assert!(vt.terminal(1).is_err());
+        assert!(tf.terminal(3).is_err());
     }
 }
