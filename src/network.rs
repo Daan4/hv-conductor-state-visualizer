@@ -118,8 +118,30 @@ impl Network {
         }        
     }
 
-    pub fn connect() -> Result<(), String> {
-        Ok(())
+    pub fn connect(&self, node_name: &str, component_name: &str, terminal: usize) -> Result<(), String> {
+        let n = self.get_node(node_name);
+        let c = self.get_component(component_name);
+        match (n, c) {
+            (Err(_), Err(_)) => Err(format!("No node with name {} and component with name {} exist in network {}", node_name, component_name, self.name())),
+            (Err(_), _) => Err(format!("No node with name {} exists in network {}", node_name, self.name())),
+            (_, Err(_)) => Err(format!("No component with name {} exists in network {}", component_name, self.name())),
+            (Ok(n), Ok(c)) => {
+                c.connect(n, terminal)
+            }
+        }
+    }
+
+    pub fn disconnect(&self, node_name: &str, component_name: &str) -> Result<(), String> {
+        let n = self.get_node(node_name);
+        let c = self.get_component(component_name);
+        match (n, c) {
+            (Err(_), Err(_)) => Err(format!("No node with name {} and component with name {} exist in network {}", node_name, component_name, self.name())),
+            (Err(_), _) => Err(format!("No node with name {} exists in network {}", node_name, self.name())),
+            (_, Err(_)) => Err(format!("No component with name {} exists in network {}", component_name, self.name())),
+            (Ok(n), Ok(c)) => {
+                c.disconnect(n)
+            }
+        }
     }
 }
 
@@ -191,6 +213,16 @@ mod tests {
 
     #[test]
     fn network_connect() {
+        let net = Network::new("net");
+        net.create_node("node").unwrap();
+        net.create_component::<CircuitBreaker>("cb").unwrap();
 
+        assert!(net.connect("does not", "exist", 0).is_err());
+        assert!(net.disconnect("node", "cb").is_err());
+        assert!(net.connect("node", "cb", 2).is_err());
+        assert!(net.connect("node", "cb", 0).is_ok());
+        assert!(net.connect("node", "cb", 1).is_err());
+        assert!(net.disconnect("node", "cb").is_ok());
+        assert!(net.connect("node", "cb", 1).is_ok());
     }
 }

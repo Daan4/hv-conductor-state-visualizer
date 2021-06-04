@@ -1,8 +1,10 @@
 use std::fmt;
 use std::cell::RefCell;
+use std::rc::Rc;
 
 use super::position::SwitchgearPosition;
 use super::terminal::Terminal;
+use super::node::Node;
 
 /// Component
 pub trait Component {
@@ -10,7 +12,48 @@ pub trait Component {
 
     fn r#type(&self) -> ComponentType;
     fn name(&self) -> &'static str;
-    fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String>;   
+    fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String>; 
+
+    /// Only allow a connection if no other terminal is connected to the given node already
+    fn connect(&self, node: Rc<Node>, index: usize) -> Result<(), String> {
+        let mut i = 0;
+        loop {
+            if i == index {
+                i += 1;
+                continue;
+            }
+            match self.terminal(i) {
+                Err(_) => { 
+                    break; 
+                },
+                Ok(t) => {
+                    if let Ok(n) = t.borrow().get_node() {
+                        if Rc::ptr_eq(&node, &n) {
+                            return Err(format!("Component {} is already connected to node {} on terminal {}", self.name(), node.name(), i));
+                        }
+                    }
+                },
+            }
+            i += 1;
+        }
+        let t = self.terminal(index)?;
+        t.borrow_mut().connect(node)?;
+        Ok(())
+    }
+
+    fn disconnect(&self, node: Rc<Node>) -> Result<(), String> {
+        let mut i = 0;
+        while let Ok(t) = self.terminal(i) {
+            let mut t = t.borrow_mut();
+            if let Ok(n) = t.get_node() {
+                if Rc::ptr_eq(&n, &node) {
+                    return t.disconnect();
+                }
+            }
+            i += 1;
+        }
+        Err(format!("Component {} is not connnected to node {}", self.name(), node.name()))
+    }
 }
 
 impl fmt::Display for dyn Component {
@@ -236,5 +279,21 @@ mod tests {
         assert!(es.terminal(1).is_err());
         assert!(vt.terminal(1).is_err());
         assert!(tf.terminal(3).is_err());
+    }
+
+    #[test]
+    fn component_connect() {
+        let n = Rc::new(Node::new("node"));
+        let n2 = Rc::new(Node::new("node2"));
+        let cb = CircuitBreaker::new("cb");
+
+        assert!(cb.disconnect(n.clone()).is_err());
+        assert!(cb.connect(n.clone(), 2).is_err());
+        assert!(cb.connect(n.clone(), 0).is_ok());
+        assert!(cb.connect(n.clone(), 0).is_err());
+        assert!(cb.connect(n.clone(), 1).is_err());
+        assert!(cb.connect(n2.clone(), 1).is_ok());
+        assert!(cb.disconnect(n2.clone()).is_ok());
+        assert!(cb.connect(n2.clone(), 0).is_err());
     }
 }

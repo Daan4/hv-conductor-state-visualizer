@@ -13,23 +13,23 @@ impl Terminal {
         }
     }
 
-    pub fn connect(&mut self, node: Rc<Node>) -> Result<(), &str> {
+    pub fn connect(&mut self, node: Rc<Node>) -> Result<(), String> {
         match self.node {
-            Some(_) => Err("Terminal already connected"),
+            Some(_) => Err("Terminal already connected".to_string()),
             None => {
-                self.node = Some(node.clone());
+                self.node = Some(node);
                 Ok(())
             },
         }
     }
 
-    pub fn disconnect(&mut self) -> Result<(), &str> {
+    pub fn disconnect(&mut self) -> Result<(), String> {
         match self.node {
             Some(_) => {
                 self.node = None;
                 Ok(())
             },
-            None => Err("Terminal not connected"),
+            None => Err("Terminal not connected".to_string()),
         }
     }
 
