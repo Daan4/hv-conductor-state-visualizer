@@ -6,22 +6,22 @@ use super::component::*;
 use super::node::*;
 
 pub struct Network {
-    name: &'static str,
+    name: String,
     nodes: RefCell<Vec<Rc<Node>>>,
     components: RefCell<Vec<Rc<dyn Component>>>,
 }
 
 impl Network {
-    pub fn new(name: &'static str) -> Network {
+    pub fn new(name: &str) -> Network {
         Network {
-            name,
+            name: name.to_string(),
             nodes: RefCell::new(vec![]),
             components: RefCell::new(vec![]),
         }
     }
 
-    pub fn name(&self) -> &'static str {
-        self.name
+    pub fn name(&self) -> &String {
+        &self.name
     }
 
     /// Each node and component in a network must have a uniquely identifying name
@@ -36,7 +36,7 @@ impl Network {
         }
     }
 
-    pub fn create_node(&self, name: &'static str) -> Result<(), String> {
+    pub fn create_node(&self, name: &str) -> Result<(), String> {
         match self.check_name(name) {
             Err(_) => Err(format!("Failed to create node {} - A node or component with this name already exists in network {}", name, self.name())),
             Ok(()) => {
@@ -77,7 +77,7 @@ impl Network {
         }     
     }
 
-    pub fn create_component<T: 'static + Component>(&self, name: &'static str) -> Result<(), String> {
+    pub fn create_component<T: 'static + Component>(&self, name: &str) -> Result<(), String> {
         match self.check_name(name) {
             Err(_) => Err(format!("Failed to create component {} - A node or component with this name already exists in network {}", name, self.name())),
             Ok(()) => {

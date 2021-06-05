@@ -8,10 +8,10 @@ use super::node::Node;
 
 /// Component
 pub trait Component {
-    fn new(name: &'static str) -> Self where Self: Sized;
+    fn new(name: &str) -> Self where Self: Sized;
 
     fn r#type(&self) -> ComponentType;
-    fn name(&self) -> &'static str;
+    fn name(&self) -> &String;
     fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String>; 
 
     /// Only allow a connection if no other terminal is connected to the given node already
@@ -74,15 +74,15 @@ pub enum ComponentType {
 
 /// Circuit Breaker
 pub struct CircuitBreaker {
-    name: &'static str,
+    name: String,
     pub position: SwitchgearPosition,
     terminals: [RefCell<Terminal>; 2],
 }
 
 impl Component for CircuitBreaker {
-    fn new(name: &'static str) -> CircuitBreaker {
+    fn new(name: &str) -> CircuitBreaker {
         CircuitBreaker { 
-            name,
+            name: name.to_string(),
             position: SwitchgearPosition::new(), 
             terminals: [RefCell::new(Terminal::new()), RefCell::new(Terminal::new())],
         }
@@ -92,8 +92,8 @@ impl Component for CircuitBreaker {
         ComponentType::CircuitBreaker
     }
 
-    fn name(&self) -> &'static str {
-        self.name
+    fn name(&self) -> &String {
+        &self.name
     }
 
     fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String> {
@@ -106,15 +106,15 @@ impl Component for CircuitBreaker {
 
 /// Disconnector
 pub struct Disconnector {
-    name: &'static str,
+    name: String,
     pub position: SwitchgearPosition,
     terminals: [RefCell<Terminal>; 2],
 }
 
 impl Component for Disconnector {
-    fn new(name: &'static str) -> Disconnector {
+    fn new(name: &str) -> Disconnector {
         Disconnector { 
-            name,
+            name: name.to_string(),
             position: SwitchgearPosition::new(), 
             terminals: [RefCell::new(Terminal::new()), RefCell::new(Terminal::new())],
         }
@@ -124,8 +124,8 @@ impl Component for Disconnector {
         ComponentType::Disconnector
     }
 
-    fn name(&self) -> &'static str {
-        self.name
+    fn name(&self) -> &String {
+        &self.name
     }
 
     fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String> {
@@ -138,15 +138,15 @@ impl Component for Disconnector {
 
 /// Earthing Switch
 pub struct EarthingSwitch {
-    name: &'static str,
+    name: String,
     pub position: SwitchgearPosition,
     terminals: [RefCell<Terminal>; 1],
 }
 
 impl Component for EarthingSwitch {
-    fn new(name: &'static str) -> EarthingSwitch {
+    fn new(name: &str) -> EarthingSwitch {
         EarthingSwitch { 
-            name,
+            name: name.to_string(),
             position: SwitchgearPosition::new(), 
             terminals: [RefCell::new(Terminal::new()); 1],
         }
@@ -156,8 +156,8 @@ impl Component for EarthingSwitch {
         ComponentType::EarthingSwitch
     }
 
-    fn name(&self) -> &'static str {
-        self.name
+    fn name(&self) -> &String {
+        &self.name
     }
 
     fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String> {
@@ -170,14 +170,14 @@ impl Component for EarthingSwitch {
 
 /// Voltage Transformer
 pub struct VoltageTransformer {
-    name: &'static str,
+    name: String,
     terminals: [RefCell<Terminal>; 1],
 }
 
 impl Component for VoltageTransformer {
-    fn new(name: &'static str) -> VoltageTransformer {
+    fn new(name: &str) -> VoltageTransformer {
         VoltageTransformer { 
-            name,
+            name: name.to_string(),
             terminals: [RefCell::new(Terminal::new())],
         }
     }
@@ -186,8 +186,8 @@ impl Component for VoltageTransformer {
         ComponentType::Measurement
     }
 
-    fn name(&self) -> &'static str {
-        self.name
+    fn name(&self) -> &String {
+        &self.name
     }
 
     fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String> {
@@ -200,14 +200,14 @@ impl Component for VoltageTransformer {
 
 /// Transformer
 pub struct Transformer {
-    name: &'static str,
+    name: String,
     terminals: [RefCell<Terminal>; 3],
 }
 
 impl Component for Transformer {
-    fn new(name: &'static str) -> Transformer {
+    fn new(name: &str) -> Transformer {
         Transformer { 
-            name,
+            name: name.to_string(),
             terminals: [RefCell::new(Terminal::new()), RefCell::new(Terminal::new()), RefCell::new(Terminal::new())],
         }
     }
@@ -216,8 +216,8 @@ impl Component for Transformer {
         ComponentType::Transformer
     }
 
-    fn name(&self) -> &'static str {
-        self.name
+    fn name(&self) -> &String {
+        &self.name
     }
 
     fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String> {

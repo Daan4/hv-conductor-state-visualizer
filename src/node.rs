@@ -5,20 +5,20 @@ use std::fmt;
 use super::component::*;
 
 pub struct Node {
-    name: &'static str,
+    name: String,
     children: RefCell<Vec<Rc<dyn Component>>>,
 }
 
 impl Node {
-    pub fn new(name: &'static str) -> Node {
+    pub fn new(name: &str) -> Node {
         Node {
-            name,
+            name: name.to_string(),
             children: RefCell::new(vec![]),
         }
     }
 
-    pub fn name(&self) -> &'static str {
-        self.name
+    pub fn name(&self) -> &String {
+        &self.name
     }
 
     pub fn add_component(&self, c: Rc<dyn Component>) -> Result<(), String> {
