@@ -6,6 +6,16 @@ use super::position::SwitchgearPosition;
 use super::terminal::Terminal;
 use super::node::Node;
 
+/// Component Type
+#[derive(Debug, PartialEq)]
+pub enum ComponentType {
+    CircuitBreaker,
+    Disconnector,
+    EarthingSwitch,
+    VoltageTransformer,
+    Transformer,
+}
+
 /// Component
 pub trait Component {
     fn new(name: &str) -> Self where Self: Sized;
@@ -60,16 +70,6 @@ impl fmt::Display for dyn Component {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Component {} of type {:?}", self.name(), self.r#type())
     }
-}
-
-/// Component Type
-#[derive(Debug, PartialEq)]
-pub enum ComponentType {
-    CircuitBreaker,
-    Disconnector,
-    EarthingSwitch,
-    Measurement,
-    Transformer,
 }
 
 /// Circuit Breaker
@@ -183,7 +183,7 @@ impl Component for VoltageTransformer {
     }
 
     fn r#type(&self) -> ComponentType {
-        ComponentType::Measurement
+        ComponentType::VoltageTransformer
     }
 
     fn name(&self) -> &String {
@@ -260,7 +260,7 @@ mod tests {
         assert_eq!(cb.r#type(), ComponentType::CircuitBreaker);
         assert_eq!(ds.r#type(), ComponentType::Disconnector);
         assert_eq!(es.r#type(), ComponentType::EarthingSwitch);
-        assert_eq!(vt.r#type(), ComponentType::Measurement);
+        assert_eq!(vt.r#type(), ComponentType::VoltageTransformer);
         assert_eq!(tf.r#type(), ComponentType::Transformer)
     }
 
