@@ -1,3 +1,5 @@
+# High Voltage Network Visualizer
+
 [![Rust](https://github.com/Daan4/hv-conductor-visualizer/actions/workflows/rust.yml/badge.svg)](https://github.com/Daan4/hv-conductor-visualizer/actions/workflows/rust.yml)
 
 Work in progress. No guarantees given as per the license.
@@ -30,4 +32,4 @@ Run CLI
 
 Generate docs
 
-    rustdoc src/lib.rs
+    rustdoc src/lib.rs --crate-name hvnv --document-private-items -o <path>/docs/target/doc
