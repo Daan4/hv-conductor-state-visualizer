@@ -9,26 +9,40 @@ use super::node::Node;
 /// Component Type
 #[derive(Debug, PartialEq)]
 pub enum ComponentType {
+    /// Circuit Breaker
     CircuitBreaker,
+    /// Disconnector
     Disconnector,
+    /// Earthing Switch
     EarthingSwitch,
+    /// Voltage Transformer
     VoltageTransformer,
+    /// Transformer
     Transformer,
 }
 
-/// Component
+/// Trait to define components. Each component should have a [ComponentType] and at least one [Terminal]
 pub trait Component {
+    /// Constructor; sets the component name
     fn new(name: &str) -> Self where Self: Sized;
 
+    /// Returns the [ComponentType] of the component
     fn r#type(&self) -> ComponentType;
+    /// Returns the name of the component
     fn name(&self) -> &String;
+    /// Returns the terminal with a given index, or an error if the component has less terminals than the given index.
     fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String>; 
 
-    /// Only allow a connection if no other terminal is connected to the given node already
-    fn connect(&self, node: Rc<Node>, index: usize) -> Result<(), String> {
+    /// Connect the component to a node on a given terminal index
+    /// 
+    /// Only allow a connection if
+    /// * The given node is not already connected to another terminal
+    /// * The given terminal index exists (the component has less terminals than the given index)
+    /// * The given terminal is not already connected to another node
+    fn connect(&self, node: Rc<Node>, terminal_index: usize) -> Result<(), String> {
         let mut i = 0;
         loop {
-            if i == index {
+            if i == terminal_index {
                 i += 1;
                 continue;
             }
@@ -46,11 +60,12 @@ pub trait Component {
             }
             i += 1;
         }
-        let t = self.terminal(index)?;
+        let t = self.terminal(terminal_index)?;
         t.borrow_mut().connect(node)?;
         Ok(())
     }
 
+    /// Disconnect the component from the given node. Returns an error if not connected to it.
     fn disconnect(&self, node: Rc<Node>) -> Result<(), String> {
         let mut i = 0;
         while let Ok(t) = self.terminal(i) {
@@ -75,7 +90,7 @@ impl fmt::Display for dyn Component {
 /// Circuit Breaker
 pub struct CircuitBreaker {
     name: String,
-    pub position: SwitchgearPosition,
+    position: SwitchgearPosition,
     terminals: [RefCell<Terminal>; 2],
 }
 
@@ -107,7 +122,7 @@ impl Component for CircuitBreaker {
 /// Disconnector
 pub struct Disconnector {
     name: String,
-    pub position: SwitchgearPosition,
+    position: SwitchgearPosition,
     terminals: [RefCell<Terminal>; 2],
 }
 
@@ -139,7 +154,7 @@ impl Component for Disconnector {
 /// Earthing Switch
 pub struct EarthingSwitch {
     name: String,
-    pub position: SwitchgearPosition,
+    position: SwitchgearPosition,
     terminals: [RefCell<Terminal>; 1],
 }
 

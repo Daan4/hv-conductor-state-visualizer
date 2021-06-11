@@ -5,6 +5,7 @@ use std::fmt;
 use super::component::*;
 use super::node::*;
 
+/// A network which contains nodes and components
 pub struct Network {
     name: String,
     nodes: RefCell<Vec<Rc<Node>>>,
@@ -12,6 +13,7 @@ pub struct Network {
 }
 
 impl Network {
+    /// Constructor, sets the network name
     pub fn new(name: &str) -> Network {
         Network {
             name: name.to_string(),
@@ -20,11 +22,12 @@ impl Network {
         }
     }
 
+    /// Return the network name
     pub fn name(&self) -> &String {
         &self.name
     }
 
-    /// Each node and component in a network must have a uniquely identifying name
+    /// Check if a given name already exists in the network. Used to enforce unique names between all nodes and components within the network.
     fn check_name(&self, name: &str) -> Result<(), ()> {
         let node_index = self.nodes.borrow().iter().position(|x| x.name() == name);
         let component_index = self.components.borrow().iter().position(|x| x.name() == name);
@@ -36,6 +39,7 @@ impl Network {
         }
     }
 
+    /// Create a node with the given name if the name is not already used in this network
     pub fn create_node(&self, name: &str) -> Result<(), String> {
         match self.check_name(name) {
             Err(_) => Err(format!("Failed to create node {} - A node or component with this name already exists in network {}", name, self.name())),
@@ -47,6 +51,7 @@ impl Network {
         }
     }
 
+    /// Remove a node with the given name from the network, if it exists
     pub fn remove_node(&self, name: &str) -> Result<(), String> {
         let index = self.nodes.borrow().iter().position(|x| x.name() == name);
         match index {
@@ -58,16 +63,19 @@ impl Network {
         }
     }
 
+    /// Return the number of nodes in the network
     pub fn node_count(&self) -> usize {
         self.nodes.borrow().len()
     }
 
+    /// Print each node in the network
     pub fn list_nodes(&self) {
         for node in self.nodes.borrow().iter() {
-            println!("{}", node);
+            println!("<{}", node);
         }
     }
 
+    /// Get a reference to the node with the given name if it exists
     pub fn get_node(&self, name: &str) -> Result<Rc<Node>, String> {
         let nodes = self.nodes.borrow();
         let node = nodes.iter().find(|x| x.name() == name);
@@ -77,6 +85,7 @@ impl Network {
         }     
     }
 
+    /// Create a component of a given [ComponentType] with a given name, if the name is not already in use in this network
     pub fn create_component<T: 'static + Component>(&self, name: &str) -> Result<(), String> {
         match self.check_name(name) {
             Err(_) => Err(format!("Failed to create component {} - A node or component with this name already exists in network {}", name, self.name())),
@@ -88,6 +97,7 @@ impl Network {
         }
     }
 
+    /// Remove a component with the given name, if it exists in the network
     pub fn remove_component(&self, name: &str) -> Result<(), String> {
         let index = self.components.borrow().iter().position(|x| x.name() == name);
         match index {
@@ -99,16 +109,19 @@ impl Network {
         }
     }
 
+    /// Return the number of components in the network
     pub fn component_count(&self) -> usize {
         self.components.borrow().len()
     }
 
+    /// Print each component in the network
     pub fn list_components(&self) {
         for component in self.components.borrow().iter() {
-            println!("{}", component);
+            println!("<{}", component);
         }
     }
 
+    /// Get a reference to the component with the given name, if it exists in the network
     pub fn get_component(&self, name: &str) -> Result<Rc<dyn Component>, String> {
         let components = self.components.borrow();
         let component = components.iter().find(|x| x.name() == name);
@@ -118,6 +131,7 @@ impl Network {
         }        
     }
 
+    /// Connect a component terminal to a node. Returns an error if the component or node do not exist, or if the connection fails see [Component::connect]
     pub fn connect(&self, node_name: &str, component_name: &str, terminal: usize) -> Result<(), String> {
         let n = self.get_node(node_name);
         let c = self.get_component(component_name);
@@ -126,11 +140,12 @@ impl Network {
             (Err(_), _) => Err(format!("No node with name {} exists in network {}", node_name, self.name())),
             (_, Err(_)) => Err(format!("No component with name {} exists in network {}", component_name, self.name())),
             (Ok(n), Ok(c)) => {
-                c.connect(n, terminal)
+                c.connect(n, terminal)          
             }
         }
     }
 
+    /// Disconnect a component from a node if it is connected. Returns an error if the component or node do not exist
     pub fn disconnect(&self, node_name: &str, component_name: &str) -> Result<(), String> {
         let n = self.get_node(node_name);
         let c = self.get_component(component_name);

@@ -4,6 +4,7 @@ use std::process;
 use super::network::Network;
 use super::component::*;
 
+/// A CLI command
 #[derive(Debug, PartialEq)]
 enum Command<'a> {
     Create([&'a str; 2]),
@@ -17,6 +18,7 @@ enum Command<'a> {
     Undefined,
 }
 
+/// Run the CLI loop; takes input from the user and executes the corresponding command
 pub fn run() {
     let net = &Network::new("default_network");
     loop {

@@ -4,12 +4,14 @@ use std::fmt;
 
 use super::component::*;
 
+/// A node, which can be connected to a set of [Component] via their [Terminal].
 pub struct Node {
     name: String,
     children: RefCell<Vec<Rc<dyn Component>>>,
 }
 
 impl Node {
+    /// Constructor sets the node name
     pub fn new(name: &str) -> Node {
         Node {
             name: name.to_string(),
@@ -17,10 +19,12 @@ impl Node {
         }
     }
 
+    /// Return node name
     pub fn name(&self) -> &String {
         &self.name
     }
 
+    /// Add component to node
     pub fn add_component(&self, c: Rc<dyn Component>) -> Result<(), String> {
         let index = self.children.borrow().iter().position(|x| Rc::ptr_eq(x, &c));
         match index {
@@ -32,6 +36,7 @@ impl Node {
         }
     }
 
+    /// Remove component from node
     pub fn remove_component(&self, c: Rc<dyn Component>) -> Result<(), String> {
         let index = self.children.borrow().iter().position(|x| Rc::ptr_eq(x, &c));
         match index {
