@@ -21,6 +21,20 @@ pub enum ComponentType {
     Transformer,
 }
 
+impl fmt::Display for ComponentType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let typestr: &str;
+        match self {
+            ComponentType::CircuitBreaker => typestr = "CircuitBreaker",
+            ComponentType::Disconnector => typestr = "Disconnector",
+            ComponentType::EarthingSwitch => typestr = "Earthing Switch",
+            ComponentType::VoltageTransformer => typestr = "Voltage Transformer",
+            ComponentType::Transformer => typestr = "Transformer",
+        }
+        write!(f, "{}", typestr)
+    }
+}
+
 /// Trait to define components. Each component should have a [ComponentType] and at least one [Terminal]
 pub trait Component {
     /// Constructor; sets the component name
@@ -79,6 +93,25 @@ pub trait Component {
         }
         Err(format!("Component {} is not connnected to node {}", self.name(), node.name()))
     }
+
+    /// Get component [SwitchgearPosition], only implemented for switchgear
+    fn position(&self) -> Result<&RefCell<SwitchgearPosition>, String> {
+        Err(format!("Components of type {} have no position", self.r#type()))
+    }
+
+    /// Open switchgear
+    fn open(&self) -> Result<(), String> {
+        let pos = self.position()?;
+        pos.borrow_mut().open()?;
+        Ok(())
+    }
+
+    /// Close switchgear
+    fn close(&self) -> Result<(), String> {
+        let pos = self.position()?;
+        pos.borrow_mut().close()?;
+        Ok(())
+    }
 }
 
 impl fmt::Display for dyn Component {
@@ -90,7 +123,7 @@ impl fmt::Display for dyn Component {
 /// Circuit Breaker
 pub struct CircuitBreaker {
     name: String,
-    position: SwitchgearPosition,
+    position: RefCell<SwitchgearPosition>,
     terminals: [RefCell<Terminal>; 2],
 }
 
@@ -98,7 +131,7 @@ impl Component for CircuitBreaker {
     fn new(name: &str) -> CircuitBreaker {
         CircuitBreaker { 
             name: name.to_string(),
-            position: SwitchgearPosition::new(), 
+            position:RefCell::new(SwitchgearPosition::new()), 
             terminals: [RefCell::new(Terminal::new()), RefCell::new(Terminal::new())],
         }
     }
@@ -109,6 +142,10 @@ impl Component for CircuitBreaker {
 
     fn name(&self) -> &String {
         &self.name
+    }
+
+    fn position(&self) -> Result<&RefCell<SwitchgearPosition>, String> {
+        Ok(&self.position)
     }
 
     fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String> {
@@ -122,7 +159,7 @@ impl Component for CircuitBreaker {
 /// Disconnector
 pub struct Disconnector {
     name: String,
-    position: SwitchgearPosition,
+    position: RefCell<SwitchgearPosition>,
     terminals: [RefCell<Terminal>; 2],
 }
 
@@ -130,7 +167,7 @@ impl Component for Disconnector {
     fn new(name: &str) -> Disconnector {
         Disconnector { 
             name: name.to_string(),
-            position: SwitchgearPosition::new(), 
+            position: RefCell::new(SwitchgearPosition::new()), 
             terminals: [RefCell::new(Terminal::new()), RefCell::new(Terminal::new())],
         }
     }
@@ -141,6 +178,10 @@ impl Component for Disconnector {
 
     fn name(&self) -> &String {
         &self.name
+    }
+
+    fn position(&self) -> Result<&RefCell<SwitchgearPosition>, String> {
+        Ok(&self.position)
     }
 
     fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String> {
@@ -154,7 +195,7 @@ impl Component for Disconnector {
 /// Earthing Switch
 pub struct EarthingSwitch {
     name: String,
-    position: SwitchgearPosition,
+    position: RefCell<SwitchgearPosition>,
     terminals: [RefCell<Terminal>; 1],
 }
 
@@ -162,7 +203,7 @@ impl Component for EarthingSwitch {
     fn new(name: &str) -> EarthingSwitch {
         EarthingSwitch { 
             name: name.to_string(),
-            position: SwitchgearPosition::new(), 
+            position: RefCell::new(SwitchgearPosition::new()), 
             terminals: [RefCell::new(Terminal::new()); 1],
         }
     }
@@ -180,6 +221,10 @@ impl Component for EarthingSwitch {
             Some(t) => Ok(t),
             None => Err(format!("Component {} of type {:?} does not have a terminal with index {}; it only has {} terminals", self.name, self.r#type(), index, self.terminals.len())),
         }
+    }
+
+    fn position(&self) -> Result<&RefCell<SwitchgearPosition>, String> {
+        Ok(&self.position)
     }
 }
 
@@ -310,5 +355,28 @@ mod tests {
         assert!(cb.connect(n2.clone(), 1).is_ok());
         assert!(cb.disconnect(n2.clone()).is_ok());
         assert!(cb.connect(n2.clone(), 0).is_err());
+    }
+
+    #[test]
+    fn switchgear_openclose() {
+        let (cb, ds, es, vt, tf) = create_test_components();
+
+        assert!(vt.close().is_err());
+        assert!(tf.close().is_err());
+
+        assert!(cb.open().is_err());
+        assert!(cb.close().is_ok());
+        assert!(cb.close().is_err());
+        assert!(cb.open().is_ok());
+
+        assert!(ds.open().is_err());
+        assert!(ds.close().is_ok());
+        assert!(ds.close().is_err());
+        assert!(ds.open().is_ok());
+
+        assert!(es.open().is_err());
+        assert!(es.close().is_ok());
+        assert!(es.close().is_err());
+        assert!(es.open().is_ok());
     }
 }

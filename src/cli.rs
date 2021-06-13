@@ -7,14 +7,27 @@ use super::component::*;
 /// A CLI command
 #[derive(Debug, PartialEq)]
 enum Command<'a> {
+    /// Create component / node command
     Create([&'a str; 2]),
+    /// Delete component / node command
     Delete(&'a str),
+    /// List all components + nodes command
     List(),
+    /// Show component / node command
     Show(&'a str),
+    /// Connect component and node command
     Connect([&'a str; 3]),
+    /// Disconnected component and node command
     Disconnect([&'a str; 2]),
+    /// Open switchgear command
+    Open(&'a str),
+    /// Close switchgear command
+    Close(&'a str),
+    /// Exit program command
     Exit,
+    /// Display help command
     Help,
+    /// Unknown command
     Undefined,
 }
 
@@ -39,11 +52,13 @@ pub fn run() {
 fn execute_command(net: &Network, cmd: Command) -> Result<(), String> {
     match cmd {
         Command::Create(args) => create(&net, args[0], args[1]),
-        Command::Delete(args) => delete(&net, args),
+        Command::Delete(arg) => delete(&net, arg),
         Command::List() => list(&net),
-        Command::Show(args) => show(&net, args),
+        Command::Show(arg) => show(&net, arg),
         Command::Connect(args) => connect(&net, args[0], args[1], args[2]),
         Command::Disconnect(args) => disconnect(&net, args[0], args[1]),
+        Command::Open(arg) => open(&net, arg),
+        Command::Close(arg) => close(&net, arg),
         Command::Exit => process::exit(0),
         Command::Help => print_help(),
         Command::Undefined => Err("Invalid command; type 'help' to see valid commands".to_string()),
@@ -130,6 +145,16 @@ fn disconnect(net: &Network, node_name: &str, component_name: &str) -> Result<()
     net.disconnect(node_name, component_name)
 }
 
+fn open(net: &Network, switchgear_name: &str) -> Result<(), String> {
+    let c = net.get_component(switchgear_name)?;
+    c.open()
+}
+
+fn close(net: &Network, switchgear_name: &str) -> Result<(), String> {
+    let c = net.get_component(switchgear_name)?;
+    c.close()
+}
+
 fn process_input(buf: &str) -> Command {
     let buf = buf.trim();
     let split: Vec<&str> = buf.split(' ').collect();
@@ -178,6 +203,20 @@ fn process_input(buf: &str) -> Command {
                 Command::Undefined
             } else {
                 Command::Disconnect([split[1], split[2]])
+            }
+        },
+        "open" => {
+            if split.len() < 2 {
+                Command::Undefined
+            } else  {
+                Command::Open(split[1])
+            }
+        },
+        "close" => {
+            if split.len() < 2 {
+                Command::Undefined
+            } else  {
+                Command::Close(split[1])
             }
         }
         "exit" => Command::Exit,
@@ -236,6 +275,16 @@ mod tests {
         assert_eq!(process_input("disconnect Arg1 Arg2 junk data here"), Command::Disconnect(["Arg1", "Arg2"]));
         assert_eq!(process_input("disconnect"), Command::Undefined);
         assert_eq!(process_input("disconnect Arg1"), Command::Undefined);
+
+        assert_eq!(process_input("open Arg1"), Command::Open("Arg1"));
+        assert_eq!(process_input("Open Arg1"), Command::Open("Arg1"));
+        assert_eq!(process_input("open Arg1 junk data here"), Command::Open("Arg1"));
+        assert_eq!(process_input("open"), Command::Undefined);
+
+        assert_eq!(process_input("close Arg1"), Command::Close("Arg1"));
+        assert_eq!(process_input("Close Arg1"), Command::Close("Arg1"));
+        assert_eq!(process_input("close Arg1 junk data here"), Command::Close("Arg1"));
+        assert_eq!(process_input("close"), Command::Undefined);
 
         assert_eq!(process_input("exit"), Command::Exit);
         assert_eq!(process_input("Exit"), Command::Exit);
@@ -302,5 +351,17 @@ mod tests {
         assert!(execute_command(net, Command::Disconnect(["1", "6"])).is_err());
         assert!(execute_command(net, Command::Disconnect(["6", "1"])).is_ok());
         assert!(net.get_component("1").unwrap().terminal(0).unwrap().borrow().get_node().is_err());
+
+        // Open / Close
+        assert!(execute_command(net, Command::Open("4")).is_err());
+        assert!(execute_command(net, Command::Close("4")).is_err());
+
+        assert!(net.get_component("1").unwrap().position().unwrap().borrow().is_open());
+        assert!(execute_command(net, Command::Open("1")).is_err());
+        assert!(execute_command(net, Command::Close("1")).is_ok());
+        assert!(net.get_component("1").unwrap().position().unwrap().borrow().is_closed());
+        assert!(execute_command(net, Command::Close("1")).is_err());
+        assert!(execute_command(net, Command::Open("1")).is_ok());
+        assert!(net.get_component("1").unwrap().position().unwrap().borrow().is_open());
     }
 }
