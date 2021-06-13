@@ -2,17 +2,20 @@ use std::rc::Rc;
 
 use super::node::Node;
 
+/// Model [Component] terminal, can be connected to a node
 pub struct Terminal {
     node: Option<Rc<Node>>,
 }
 
 impl Terminal {
+    /// Constructor
     pub fn new() -> Terminal {
         Terminal {
             node: None,
         }
     }
 
+    /// Connect to node if not already connected
     pub fn connect(&mut self, node: Rc<Node>) -> Result<(), String> {
         match self.node {
             Some(_) => Err("Terminal already connected".to_string()),
@@ -23,6 +26,7 @@ impl Terminal {
         }
     }
 
+    /// Disconnect from node if connected
     pub fn disconnect(&mut self) -> Result<(), String> {
         match self.node {
             Some(_) => {
@@ -33,10 +37,11 @@ impl Terminal {
         }
     }
 
-    pub fn get_node(&self) -> Result<Rc<Node>, &str> {
+    /// Get a reference to the connected node (if connected)
+    pub fn get_node(&self) -> Result<Rc<Node>, String> {
         match self.node.clone() {
             Some(node) => Ok(node),
-            None => Err("Terminal not connected"),
+            None => Err("Terminal not connected".to_string()),
         }
     }
 }
