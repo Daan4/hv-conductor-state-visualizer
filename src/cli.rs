@@ -23,6 +23,8 @@ enum Command<'a> {
     Open(&'a str),
     /// Close switchgear command
     Close(&'a str),
+    /// Update measurement value
+    Update([&'a str; 2]),
     /// Exit program command
     Exit,
     /// Display help command
@@ -59,6 +61,7 @@ fn execute_command(net: &Network, cmd: Command) -> Result<(), String> {
         Command::Disconnect(args) => disconnect(&net, args[0], args[1]),
         Command::Open(arg) => open(&net, arg),
         Command::Close(arg) => close(&net, arg),
+        Command::Update(args) => update(&net, args[0], args[1]),
         Command::Exit => process::exit(0),
         Command::Help => print_help(),
         Command::Undefined => Err("Invalid command; type 'help' to see valid commands".to_string()),
@@ -153,14 +156,23 @@ fn disconnect(net: &Network, node_name: &str, component_name: &str) -> Result<()
     net.disconnect(node_name, component_name)
 }
 
-fn open(net: &Network, switchgear_name: &str) -> Result<(), String> {
-    let c = net.get_component(switchgear_name)?;
+fn open(net: &Network, component_name: &str) -> Result<(), String> {
+    let c = net.get_component(component_name)?;
     c.open()
 }
 
-fn close(net: &Network, switchgear_name: &str) -> Result<(), String> {
-    let c = net.get_component(switchgear_name)?;
+fn close(net: &Network, component_name: &str) -> Result<(), String> {
+    let c = net.get_component(component_name)?;
     c.close()
+}
+
+fn update(net: &Network, component_name: &str, value: &str) -> Result<(), String> {
+    let c = net.get_component(component_name)?;
+    if let Ok(v) = value.parse::<f64>() {
+        c.update(v)
+    } else {
+        Err("Update value has to be a number".to_string())
+    }
 }
 
 fn process_input(buf: &str) -> Command {
@@ -225,6 +237,13 @@ fn process_input(buf: &str) -> Command {
                 Command::Undefined
             } else {
                 Command::Close(split[1])
+            }
+        }
+        "update" => {
+            if split.len() < 3 {
+                Command::Undefined
+            } else {
+                Command::Update([split[1], split[2]])
             }
         }
         "exit" => Command::Exit,
@@ -332,6 +351,21 @@ mod tests {
             Command::Close("Arg1")
         );
         assert_eq!(process_input("close"), Command::Undefined);
+
+        assert_eq!(
+            process_input("update Arg1 Arg2"),
+            Command::Update(["Arg1", "Arg2"])
+        );
+        assert_eq!(
+            process_input("Update Arg1 Arg2"),
+            Command::Update(["Arg1", "Arg2"])
+        );
+        assert_eq!(
+            process_input("update Arg1 Arg2 junk data here"),
+            Command::Update(["Arg1", "Arg2"])
+        );
+        assert_eq!(process_input("update"), Command::Undefined);
+        assert_eq!(process_input("update Arg1"), Command::Undefined);
 
         assert_eq!(process_input("exit"), Command::Exit);
         assert_eq!(process_input("Exit"), Command::Exit);
@@ -460,5 +494,14 @@ mod tests {
             .unwrap()
             .borrow()
             .is_open());
+
+        // Update
+        assert!(execute_command(net, Command::Update(["3", "618.581"])).is_err());
+        assert!(execute_command(net, Command::Update(["4", "not a number"])).is_err());
+        assert_eq!(net.get_component("4").unwrap().value().unwrap(), 0f64);
+        assert!(execute_command(net, Command::Update(["4", "618.581"])).is_ok());
+        assert_eq!(net.get_component("4").unwrap().value().unwrap(), 618.581);
+        assert!(execute_command(net, Command::Update(["4", "5"])).is_ok());
+        assert_eq!(net.get_component("4").unwrap().value().unwrap(), 5f64);
     }
 }
