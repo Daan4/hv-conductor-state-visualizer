@@ -8,6 +8,8 @@
 pub mod cli;
 /// Component API
 pub mod component;
+/// Measurement struct
+pub mod measurement;
 /// Network API
 pub mod network;
 /// Node API
@@ -16,5 +18,3 @@ pub mod node;
 pub mod position;
 /// Component Terminal struct
 pub mod terminal;
-/// Measurement struct
-pub mod measurement;
