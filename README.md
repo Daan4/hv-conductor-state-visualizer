@@ -32,4 +32,4 @@ Run CLI
 
 Generate docs
 
-    rustdoc src/lib.rs --crate-name hvnv -o <path>/docs/target/doc
+    rustdoc src/lib.rs --crate-name hvnv -o docs/target/doc
