@@ -1,6 +1,6 @@
 use std::cell::RefCell;
-use std::rc::Rc;
 use std::fmt;
+use std::rc::Rc;
 
 use super::component::*;
 
@@ -26,9 +26,17 @@ impl Node {
 
     /// Add component to node
     pub fn add_component(&self, c: Rc<dyn Component>) -> Result<(), String> {
-        let index = self.children.borrow().iter().position(|x| Rc::ptr_eq(x, &c));
+        let index = self
+            .children
+            .borrow()
+            .iter()
+            .position(|x| Rc::ptr_eq(x, &c));
         match index {
-            Some(_) => Err(format!("Failed to add component {} to node {} - Component already exists on node", c.name(), self.name())),
+            Some(_) => Err(format!(
+                "Failed to add component {} to node {} - Component already exists on node",
+                c.name(),
+                self.name()
+            )),
             None => {
                 self.children.borrow_mut().push(c);
                 Ok(())
@@ -38,13 +46,21 @@ impl Node {
 
     /// Remove component from node
     pub fn remove_component(&self, c: Rc<dyn Component>) -> Result<(), String> {
-        let index = self.children.borrow().iter().position(|x| Rc::ptr_eq(x, &c));
+        let index = self
+            .children
+            .borrow()
+            .iter()
+            .position(|x| Rc::ptr_eq(x, &c));
         match index {
             Some(i) => {
                 self.children.borrow_mut().remove(i);
                 Ok(())
-            },
-            None => Err(format!("Failed to remove component {} from node {} - Component does not exist on node", c.name(), self.name()))
+            }
+            None => Err(format!(
+                "Failed to remove component {} from node {} - Component does not exist on node",
+                c.name(),
+                self.name()
+            )),
         }
     }
 }

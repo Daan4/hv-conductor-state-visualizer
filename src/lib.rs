@@ -4,14 +4,14 @@
 #![warn(missing_docs)]
 #![warn(rustdoc::broken_intra_doc_links)]
 
-/// Component API
-pub mod component;
-/// Node API
-pub mod node;
-/// Network API
-pub mod network;
 /// CLI interface to interact with the component, node and network APIs
 pub mod cli;
+/// Component API
+pub mod component;
+/// Network API
+pub mod network;
+/// Node API
+pub mod node;
 /// Switchgear Position struct
 pub mod position;
 /// Component Terminal struct

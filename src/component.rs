@@ -1,10 +1,10 @@
-use std::fmt;
 use std::cell::RefCell;
+use std::fmt;
 use std::rc::Rc;
 
+use super::node::Node;
 use super::position::SwitchgearPosition;
 use super::terminal::Terminal;
-use super::node::Node;
 
 /// Component Type
 #[derive(Debug, PartialEq)]
@@ -38,17 +38,19 @@ impl fmt::Display for ComponentType {
 /// Trait to define components. Each component should have a [ComponentType] and at least one [Terminal]
 pub trait Component {
     /// Constructor; sets the component name
-    fn new(name: &str) -> Self where Self: Sized;
+    fn new(name: &str) -> Self
+    where
+        Self: Sized;
 
     /// Returns the [ComponentType] of the component
     fn r#type(&self) -> ComponentType;
     /// Returns the name of the component
     fn name(&self) -> &String;
     /// Returns the terminal with a given index, or an error if the component has less terminals than the given index.
-    fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String>; 
+    fn terminal(&self, index: usize) -> Result<&RefCell<Terminal>, String>;
 
     /// Connect the component to a node on a given terminal index
-    /// 
+    ///
     /// Only allow a connection if
     /// * The given node is not already connected to another terminal
     /// * The given terminal index exists (the component has less terminals than the given index)
@@ -61,16 +63,21 @@ pub trait Component {
                 continue;
             }
             match self.terminal(i) {
-                Err(_) => { 
-                    break; 
-                },
+                Err(_) => {
+                    break;
+                }
                 Ok(t) => {
                     if let Ok(n) = t.borrow().get_node() {
                         if Rc::ptr_eq(&node, &n) {
-                            return Err(format!("Component {} is already connected to node {} on terminal {}", self.name(), node.name(), i));
+                            return Err(format!(
+                                "Component {} is already connected to node {} on terminal {}",
+                                self.name(),
+                                node.name(),
+                                i
+                            ));
                         }
                     }
-                },
+                }
             }
             i += 1;
         }
@@ -91,12 +98,19 @@ pub trait Component {
             }
             i += 1;
         }
-        Err(format!("Component {} is not connnected to node {}", self.name(), node.name()))
+        Err(format!(
+            "Component {} is not connnected to node {}",
+            self.name(),
+            node.name()
+        ))
     }
 
     /// Get component [SwitchgearPosition], only implemented for switchgear
     fn position(&self) -> Result<&RefCell<SwitchgearPosition>, String> {
-        Err(format!("Components of type {} have no position", self.r#type()))
+        Err(format!(
+            "Components of type {} have no position",
+            self.r#type()
+        ))
     }
 
     /// Open switchgear
@@ -129,9 +143,9 @@ pub struct CircuitBreaker {
 
 impl Component for CircuitBreaker {
     fn new(name: &str) -> CircuitBreaker {
-        CircuitBreaker { 
+        CircuitBreaker {
             name: name.to_string(),
-            position:RefCell::new(SwitchgearPosition::new()), 
+            position: RefCell::new(SwitchgearPosition::new()),
             terminals: [RefCell::new(Terminal::new()), RefCell::new(Terminal::new())],
         }
     }
@@ -165,9 +179,9 @@ pub struct Disconnector {
 
 impl Component for Disconnector {
     fn new(name: &str) -> Disconnector {
-        Disconnector { 
+        Disconnector {
             name: name.to_string(),
-            position: RefCell::new(SwitchgearPosition::new()), 
+            position: RefCell::new(SwitchgearPosition::new()),
             terminals: [RefCell::new(Terminal::new()), RefCell::new(Terminal::new())],
         }
     }
@@ -201,9 +215,9 @@ pub struct EarthingSwitch {
 
 impl Component for EarthingSwitch {
     fn new(name: &str) -> EarthingSwitch {
-        EarthingSwitch { 
+        EarthingSwitch {
             name: name.to_string(),
-            position: RefCell::new(SwitchgearPosition::new()), 
+            position: RefCell::new(SwitchgearPosition::new()),
             terminals: [RefCell::new(Terminal::new()); 1],
         }
     }
@@ -236,7 +250,7 @@ pub struct VoltageTransformer {
 
 impl Component for VoltageTransformer {
     fn new(name: &str) -> VoltageTransformer {
-        VoltageTransformer { 
+        VoltageTransformer {
             name: name.to_string(),
             terminals: [RefCell::new(Terminal::new())],
         }
@@ -266,9 +280,13 @@ pub struct Transformer {
 
 impl Component for Transformer {
     fn new(name: &str) -> Transformer {
-        Transformer { 
+        Transformer {
             name: name.to_string(),
-            terminals: [RefCell::new(Terminal::new()), RefCell::new(Terminal::new()), RefCell::new(Terminal::new())],
+            terminals: [
+                RefCell::new(Terminal::new()),
+                RefCell::new(Terminal::new()),
+                RefCell::new(Terminal::new()),
+            ],
         }
     }
 
@@ -292,7 +310,13 @@ impl Component for Transformer {
 mod tests {
     use super::*;
 
-    fn create_test_components() -> (CircuitBreaker, Disconnector, EarthingSwitch, VoltageTransformer, Transformer) {
+    fn create_test_components() -> (
+        CircuitBreaker,
+        Disconnector,
+        EarthingSwitch,
+        VoltageTransformer,
+        Transformer,
+    ) {
         let cb = CircuitBreaker::new("cb");
         let ds = Disconnector::new("ds");
         let es = EarthingSwitch::new("es");
@@ -312,7 +336,7 @@ mod tests {
         assert_eq!(vt.name(), "vt");
         assert_eq!(tf.name(), "tf");
     }
-    
+
     #[test]
     fn component_types() {
         let (cb, ds, es, vt, tf) = create_test_components();

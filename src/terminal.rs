@@ -10,9 +10,7 @@ pub struct Terminal {
 impl Terminal {
     /// Constructor
     pub fn new() -> Terminal {
-        Terminal {
-            node: None,
-        }
+        Terminal { node: None }
     }
 
     /// Connect to node if not already connected
@@ -22,7 +20,7 @@ impl Terminal {
             None => {
                 self.node = Some(node);
                 Ok(())
-            },
+            }
         }
     }
 
@@ -32,7 +30,7 @@ impl Terminal {
             Some(_) => {
                 self.node = None;
                 Ok(())
-            },
+            }
             None => Err("Terminal not connected".to_string()),
         }
     }

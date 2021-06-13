@@ -1,6 +1,6 @@
 use std::cell::RefCell;
-use std::rc::Rc;
 use std::fmt;
+use std::rc::Rc;
 
 use super::component::*;
 use super::node::*;
@@ -30,12 +30,16 @@ impl Network {
     /// Check if a given name already exists in the network. Used to enforce unique names between all nodes and components within the network.
     fn check_name(&self, name: &str) -> Result<(), ()> {
         let node_index = self.nodes.borrow().iter().position(|x| x.name() == name);
-        let component_index = self.components.borrow().iter().position(|x| x.name() == name);
+        let component_index = self
+            .components
+            .borrow()
+            .iter()
+            .position(|x| x.name() == name);
         match (node_index, component_index) {
             (Some(_), Some(_)) => Err(()),
             (Some(_), None) => Err(()),
             (None, Some(_)) => Err(()),
-            (None, None) => Ok(())
+            (None, None) => Ok(()),
         }
     }
 
@@ -58,8 +62,12 @@ impl Network {
             Some(i) => {
                 self.nodes.borrow_mut().remove(i);
                 Ok(())
-            },
-            None => Err(format!("Failed to remove node {} - No node with this name exists in network {}", name, self.name()))
+            }
+            None => Err(format!(
+                "Failed to remove node {} - No node with this name exists in network {}",
+                name,
+                self.name()
+            )),
         }
     }
 
@@ -81,8 +89,12 @@ impl Network {
         let node = nodes.iter().find(|x| x.name() == name);
         match node {
             Some(node) => Ok(node.clone()),
-            None => Err(format!("Node with name {} does not exist in network {}", name, self.name()))
-        }     
+            None => Err(format!(
+                "Node with name {} does not exist in network {}",
+                name,
+                self.name()
+            )),
+        }
     }
 
     /// Create a component of a given [ComponentType] with a given name, if the name is not already in use in this network
@@ -99,13 +111,21 @@ impl Network {
 
     /// Remove a component with the given name, if it exists in the network
     pub fn remove_component(&self, name: &str) -> Result<(), String> {
-        let index = self.components.borrow().iter().position(|x| x.name() == name);
+        let index = self
+            .components
+            .borrow()
+            .iter()
+            .position(|x| x.name() == name);
         match index {
             Some(i) => {
                 self.components.borrow_mut().remove(i);
                 Ok(())
-            },
-            None => Err(format!("Failed to remove component {} - No component with this name exists in network {}", name, self.name()))
+            }
+            None => Err(format!(
+                "Failed to remove component {} - No component with this name exists in network {}",
+                name,
+                self.name()
+            )),
         }
     }
 
@@ -127,21 +147,41 @@ impl Network {
         let component = components.iter().find(|x| x.name() == name);
         match component {
             Some(component) => Ok(component.clone()),
-            None => Err(format!("Component with name {} does not exist in network {}", name, self.name()))
-        }        
+            None => Err(format!(
+                "Component with name {} does not exist in network {}",
+                name,
+                self.name()
+            )),
+        }
     }
 
     /// Connect a component terminal to a node. Returns an error if the component or node do not exist, or if the connection fails see [Component::connect]
-    pub fn connect(&self, node_name: &str, component_name: &str, terminal: usize) -> Result<(), String> {
+    pub fn connect(
+        &self,
+        node_name: &str,
+        component_name: &str,
+        terminal: usize,
+    ) -> Result<(), String> {
         let n = self.get_node(node_name);
         let c = self.get_component(component_name);
         match (n, c) {
-            (Err(_), Err(_)) => Err(format!("No node with name {} and component with name {} exist in network {}", node_name, component_name, self.name())),
-            (Err(_), _) => Err(format!("No node with name {} exists in network {}", node_name, self.name())),
-            (_, Err(_)) => Err(format!("No component with name {} exists in network {}", component_name, self.name())),
-            (Ok(n), Ok(c)) => {
-                c.connect(n, terminal)          
-            }
+            (Err(_), Err(_)) => Err(format!(
+                "No node with name {} and component with name {} exist in network {}",
+                node_name,
+                component_name,
+                self.name()
+            )),
+            (Err(_), _) => Err(format!(
+                "No node with name {} exists in network {}",
+                node_name,
+                self.name()
+            )),
+            (_, Err(_)) => Err(format!(
+                "No component with name {} exists in network {}",
+                component_name,
+                self.name()
+            )),
+            (Ok(n), Ok(c)) => c.connect(n, terminal),
         }
     }
 
@@ -150,12 +190,23 @@ impl Network {
         let n = self.get_node(node_name);
         let c = self.get_component(component_name);
         match (n, c) {
-            (Err(_), Err(_)) => Err(format!("No node with name {} and component with name {} exist in network {}", node_name, component_name, self.name())),
-            (Err(_), _) => Err(format!("No node with name {} exists in network {}", node_name, self.name())),
-            (_, Err(_)) => Err(format!("No component with name {} exists in network {}", component_name, self.name())),
-            (Ok(n), Ok(c)) => {
-                c.disconnect(n)
-            }
+            (Err(_), Err(_)) => Err(format!(
+                "No node with name {} and component with name {} exist in network {}",
+                node_name,
+                component_name,
+                self.name()
+            )),
+            (Err(_), _) => Err(format!(
+                "No node with name {} exists in network {}",
+                node_name,
+                self.name()
+            )),
+            (_, Err(_)) => Err(format!(
+                "No component with name {} exists in network {}",
+                component_name,
+                self.name()
+            )),
+            (Ok(n), Ok(c)) => c.disconnect(n),
         }
     }
 }
@@ -211,7 +262,7 @@ mod tests {
         assert!(net.get_node("node").unwrap().name() == "node");
         assert!(net.create_component::<CircuitBreaker>("node").is_err());
         assert!(net.create_node("node").is_err());
-        assert_eq!(net.node_count(), 1);        
+        assert_eq!(net.node_count(), 1);
 
         net.create_node("node2").unwrap();
         assert!(net.get_node("node2").unwrap().name() == "node2");

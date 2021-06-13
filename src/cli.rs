@@ -1,8 +1,8 @@
 use std::io::{stdin, stdout, Write};
 use std::process;
 
-use super::network::Network;
 use super::component::*;
+use super::network::Network;
 
 /// A CLI command
 #[derive(Debug, PartialEq)]
@@ -43,8 +43,8 @@ pub fn run() {
         match execute_command(net, cmd) {
             Err(e) => {
                 println!("<{}", e);
-            },
-            Ok(_) => {},
+            }
+            Ok(_) => {}
         }
     }
 }
@@ -70,28 +70,31 @@ fn create(net: &Network, _type: &str, name: &str) -> Result<(), String> {
         "cb" => {
             println!("<Created Circuit Breaker {}", name);
             net.create_component::<CircuitBreaker>(&name)
-        },
+        }
         "ds" => {
             println!("<Created Disconnector {}", name);
             net.create_component::<Disconnector>(&name)
-        },
+        }
         "es" => {
             println!("<Created Disconnector {}", name);
             net.create_component::<EarthingSwitch>(&name)
-        },
+        }
         "vt" => {
             println!("<Created Voltage Transformer {}", name);
             net.create_component::<VoltageTransformer>(&name)
-        },
+        }
         "tf" => {
             println!("<Created Transformer {}", name);
             net.create_component::<Transformer>(&name)
-        },
+        }
         "node" => {
             println!("<Created Node {}", name);
             net.create_node(&name)
-        },
-        _ => Err(format!("{} type does not exist (cb, ds, es, vt, tf, node)", _type)),
+        }
+        _ => Err(format!(
+            "{} type does not exist (cb, ds, es, vt, tf, node)",
+            _type
+        )),
     }
 }
 
@@ -100,11 +103,11 @@ fn delete(net: &Network, name: &str) -> Result<(), String> {
         (Ok(_), _) => {
             println!("<Deleted Node {}", name);
             Ok(())
-        },
+        }
         (_, Ok(_)) => {
             println!("<Deleted Component {}", name);
             Ok(())
-        },
+        }
         (_, _) => Err(format!("No node or component with name {} exists", name)),
     }
 }
@@ -121,27 +124,32 @@ fn show(net: &Network, name: &str) -> Result<(), String> {
     match (net.get_node(name), net.get_component(name)) {
         (Ok(n), _) => {
             println!("<{}", n);
-        },
+        }
         (_, Ok(c)) => {
             println!("<{}", c);
-        },
+        }
         (_, _) => return Err(format!("No node or component with name {} exists", name)),
     }
     Ok(())
 }
 
-fn connect(net: &Network, node_name: &str, component_name: &str, terminal: &str) -> Result<(), String> {
+fn connect(
+    net: &Network,
+    node_name: &str,
+    component_name: &str,
+    terminal: &str,
+) -> Result<(), String> {
     let terminal_usize: usize;
     match terminal.parse::<usize>() {
         Ok(t) => {
             terminal_usize = t;
-        }, 
+        }
         Err(_) => return Err("Terminal (3rd argument) is not an unsigned integer".to_string()),
     }
     net.connect(node_name, component_name, terminal_usize)
 }
 
-fn disconnect(net: &Network, node_name: &str, component_name: &str) -> Result<(), String>  {
+fn disconnect(net: &Network, node_name: &str, component_name: &str) -> Result<(), String> {
     net.disconnect(node_name, component_name)
 }
 
@@ -159,7 +167,7 @@ fn process_input(buf: &str) -> Command {
     let buf = buf.trim();
     let split: Vec<&str> = buf.split(' ').collect();
     if split.len() == 0 {
-        return Command::Undefined
+        return Command::Undefined;
     }
     let cmd: &str = &split[0].to_lowercase();
     match cmd {
@@ -169,53 +177,53 @@ fn process_input(buf: &str) -> Command {
             } else {
                 Command::Create([split[1], split[2]])
             }
-        },
+        }
         "delete" => {
             if split.len() < 2 {
                 Command::Undefined
             } else {
                 Command::Delete(split[1])
             }
-        },
+        }
         "list" => {
             if split.len() < 1 {
                 Command::Undefined
             } else {
                 Command::List()
             }
-        },
+        }
         "show" => {
             if split.len() < 2 {
                 Command::Undefined
             } else {
                 Command::Show(split[1])
             }
-        },
+        }
         "connect" => {
             if split.len() < 4 {
                 Command::Undefined
             } else {
                 Command::Connect([split[1], split[2], split[3]])
             }
-        },
+        }
         "disconnect" => {
             if split.len() < 3 {
                 Command::Undefined
             } else {
                 Command::Disconnect([split[1], split[2]])
             }
-        },
+        }
         "open" => {
             if split.len() < 2 {
                 Command::Undefined
-            } else  {
+            } else {
                 Command::Open(split[1])
             }
-        },
+        }
         "close" => {
             if split.len() < 2 {
                 Command::Undefined
-            } else  {
+            } else {
                 Command::Close(split[1])
             }
         }
@@ -243,15 +251,27 @@ mod tests {
 
     #[test]
     fn cli_process_input() {
-        assert_eq!(process_input("create Arg1 Arg2"), Command::Create(["Arg1", "Arg2"]));
-        assert_eq!(process_input("Create Arg1 Arg2"), Command::Create(["Arg1", "Arg2"]));
-        assert_eq!(process_input("create Arg1 Arg2 junk data here"), Command::Create(["Arg1", "Arg2"]));
+        assert_eq!(
+            process_input("create Arg1 Arg2"),
+            Command::Create(["Arg1", "Arg2"])
+        );
+        assert_eq!(
+            process_input("Create Arg1 Arg2"),
+            Command::Create(["Arg1", "Arg2"])
+        );
+        assert_eq!(
+            process_input("create Arg1 Arg2 junk data here"),
+            Command::Create(["Arg1", "Arg2"])
+        );
         assert_eq!(process_input("create"), Command::Undefined);
         assert_eq!(process_input("create Arg1"), Command::Undefined);
 
         assert_eq!(process_input("delete Arg1"), Command::Delete("Arg1"));
         assert_eq!(process_input("Delete Arg1"), Command::Delete("Arg1"));
-        assert_eq!(process_input("delete Arg1 junk data here"), Command::Delete("Arg1"));
+        assert_eq!(
+            process_input("delete Arg1 junk data here"),
+            Command::Delete("Arg1")
+        );
         assert_eq!(process_input("delete"), Command::Undefined);
 
         assert_eq!(process_input("list"), Command::List());
@@ -260,30 +280,57 @@ mod tests {
 
         assert_eq!(process_input("show Arg1"), Command::Show("Arg1"));
         assert_eq!(process_input("Show Arg1"), Command::Show("Arg1"));
-        assert_eq!(process_input("show Arg1 junk data here"), Command::Show("Arg1"));
+        assert_eq!(
+            process_input("show Arg1 junk data here"),
+            Command::Show("Arg1")
+        );
         assert_eq!(process_input("show"), Command::Undefined);
 
-        assert_eq!(process_input("connect Arg1 Arg2 Arg3"), Command::Connect(["Arg1", "Arg2", "Arg3"]));
-        assert_eq!(process_input("Connect Arg1 Arg2 Arg3"), Command::Connect(["Arg1", "Arg2", "Arg3"]));
-        assert_eq!(process_input("connect Arg1 Arg2 Arg3 junk data here"), Command::Connect(["Arg1", "Arg2", "Arg3"]));
+        assert_eq!(
+            process_input("connect Arg1 Arg2 Arg3"),
+            Command::Connect(["Arg1", "Arg2", "Arg3"])
+        );
+        assert_eq!(
+            process_input("Connect Arg1 Arg2 Arg3"),
+            Command::Connect(["Arg1", "Arg2", "Arg3"])
+        );
+        assert_eq!(
+            process_input("connect Arg1 Arg2 Arg3 junk data here"),
+            Command::Connect(["Arg1", "Arg2", "Arg3"])
+        );
         assert_eq!(process_input("connect"), Command::Undefined);
         assert_eq!(process_input("connect Arg1"), Command::Undefined);
         assert_eq!(process_input("connect Arg1 Arg2"), Command::Undefined);
 
-        assert_eq!(process_input("disconnect Arg1 Arg2"), Command::Disconnect(["Arg1", "Arg2"]));
-        assert_eq!(process_input("Disconnect Arg1 Arg2"), Command::Disconnect(["Arg1", "Arg2"]));
-        assert_eq!(process_input("disconnect Arg1 Arg2 junk data here"), Command::Disconnect(["Arg1", "Arg2"]));
+        assert_eq!(
+            process_input("disconnect Arg1 Arg2"),
+            Command::Disconnect(["Arg1", "Arg2"])
+        );
+        assert_eq!(
+            process_input("Disconnect Arg1 Arg2"),
+            Command::Disconnect(["Arg1", "Arg2"])
+        );
+        assert_eq!(
+            process_input("disconnect Arg1 Arg2 junk data here"),
+            Command::Disconnect(["Arg1", "Arg2"])
+        );
         assert_eq!(process_input("disconnect"), Command::Undefined);
         assert_eq!(process_input("disconnect Arg1"), Command::Undefined);
 
         assert_eq!(process_input("open Arg1"), Command::Open("Arg1"));
         assert_eq!(process_input("Open Arg1"), Command::Open("Arg1"));
-        assert_eq!(process_input("open Arg1 junk data here"), Command::Open("Arg1"));
+        assert_eq!(
+            process_input("open Arg1 junk data here"),
+            Command::Open("Arg1")
+        );
         assert_eq!(process_input("open"), Command::Undefined);
 
         assert_eq!(process_input("close Arg1"), Command::Close("Arg1"));
         assert_eq!(process_input("Close Arg1"), Command::Close("Arg1"));
-        assert_eq!(process_input("close Arg1 junk data here"), Command::Close("Arg1"));
+        assert_eq!(
+            process_input("close Arg1 junk data here"),
+            Command::Close("Arg1")
+        );
         assert_eq!(process_input("close"), Command::Undefined);
 
         assert_eq!(process_input("exit"), Command::Exit);
@@ -296,28 +343,46 @@ mod tests {
 
         assert_eq!(process_input(""), Command::Undefined);
         assert_eq!(process_input("thisisnotacommand"), Command::Undefined);
-        assert_eq!(process_input("This Is Also Not A Command!"), Command::Undefined);
+        assert_eq!(
+            process_input("This Is Also Not A Command!"),
+            Command::Undefined
+        );
     }
 
     #[test]
     fn cli_commands() {
         let net = &Network::new("net");
-        
+
         // Create
         assert!(execute_command(net, Command::Create(["cb", "1"])).is_ok());
-        assert_eq!(net.get_component("1").unwrap().r#type(), ComponentType::CircuitBreaker);
+        assert_eq!(
+            net.get_component("1").unwrap().r#type(),
+            ComponentType::CircuitBreaker
+        );
 
         assert!(execute_command(net, Command::Create(["ds", "2"])).is_ok());
-        assert_eq!(net.get_component("2").unwrap().r#type(), ComponentType::Disconnector);
+        assert_eq!(
+            net.get_component("2").unwrap().r#type(),
+            ComponentType::Disconnector
+        );
 
         assert!(execute_command(net, Command::Create(["es", "3"])).is_ok());
-        assert_eq!(net.get_component("3").unwrap().r#type(), ComponentType::EarthingSwitch);
+        assert_eq!(
+            net.get_component("3").unwrap().r#type(),
+            ComponentType::EarthingSwitch
+        );
 
         assert!(execute_command(net, Command::Create(["vt", "4"])).is_ok());
-        assert_eq!(net.get_component("4").unwrap().r#type(), ComponentType::VoltageTransformer);
+        assert_eq!(
+            net.get_component("4").unwrap().r#type(),
+            ComponentType::VoltageTransformer
+        );
 
         assert!(execute_command(net, Command::Create(["tf", "5"])).is_ok());
-        assert_eq!(net.get_component("5").unwrap().r#type(), ComponentType::Transformer);
+        assert_eq!(
+            net.get_component("5").unwrap().r#type(),
+            ComponentType::Transformer
+        );
 
         assert!(execute_command(net, Command::Create(["node", "6"])).is_ok());
         assert_eq!(net.get_node("6").unwrap().name(), "6");
@@ -345,23 +410,55 @@ mod tests {
         assert!(execute_command(net, Command::Connect(["6", "1", "z"])).is_err());
         assert!(execute_command(net, Command::Connect(["1", "6", "0"])).is_err());
         assert!(execute_command(net, Command::Connect(["6", "1", "0"])).is_ok());
-        assert!(net.get_component("1").unwrap().terminal(0).unwrap().borrow().get_node().is_ok());
+        assert!(net
+            .get_component("1")
+            .unwrap()
+            .terminal(0)
+            .unwrap()
+            .borrow()
+            .get_node()
+            .is_ok());
 
         // Disconnect
         assert!(execute_command(net, Command::Disconnect(["1", "6"])).is_err());
         assert!(execute_command(net, Command::Disconnect(["6", "1"])).is_ok());
-        assert!(net.get_component("1").unwrap().terminal(0).unwrap().borrow().get_node().is_err());
+        assert!(net
+            .get_component("1")
+            .unwrap()
+            .terminal(0)
+            .unwrap()
+            .borrow()
+            .get_node()
+            .is_err());
 
         // Open / Close
         assert!(execute_command(net, Command::Open("4")).is_err());
         assert!(execute_command(net, Command::Close("4")).is_err());
 
-        assert!(net.get_component("1").unwrap().position().unwrap().borrow().is_open());
+        assert!(net
+            .get_component("1")
+            .unwrap()
+            .position()
+            .unwrap()
+            .borrow()
+            .is_open());
         assert!(execute_command(net, Command::Open("1")).is_err());
         assert!(execute_command(net, Command::Close("1")).is_ok());
-        assert!(net.get_component("1").unwrap().position().unwrap().borrow().is_closed());
+        assert!(net
+            .get_component("1")
+            .unwrap()
+            .position()
+            .unwrap()
+            .borrow()
+            .is_closed());
         assert!(execute_command(net, Command::Close("1")).is_err());
         assert!(execute_command(net, Command::Open("1")).is_ok());
-        assert!(net.get_component("1").unwrap().position().unwrap().borrow().is_open());
+        assert!(net
+            .get_component("1")
+            .unwrap()
+            .position()
+            .unwrap()
+            .borrow()
+            .is_open());
     }
 }
