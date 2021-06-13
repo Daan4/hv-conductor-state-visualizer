@@ -16,3 +16,5 @@ pub mod node;
 pub mod position;
 /// Component Terminal struct
 pub mod terminal;
+/// Measurement struct
+pub mod measurement;

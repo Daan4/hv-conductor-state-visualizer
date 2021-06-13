@@ -2,6 +2,7 @@ use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 
+use super::measurement::Measurement;
 use super::node::Node;
 use super::position::SwitchgearPosition;
 use super::terminal::Terminal;
@@ -126,6 +127,16 @@ pub trait Component {
         pos.borrow_mut().close()?;
         Ok(())
     }
+    
+    /// Update measurement value
+    fn update(&self, _value: f64) -> Result<(), String> {
+        Err(format!("Components of type {} have no measurement", self.r#type()))
+    }
+    
+    /// Get measurement value
+    fn value(&self) -> Result<f64, String> {
+        Err(format!("Components of type {} hve no measurement", self.r#type()))
+    }
 }
 
 impl fmt::Display for dyn Component {
@@ -245,6 +256,7 @@ impl Component for EarthingSwitch {
 /// Voltage Transformer
 pub struct VoltageTransformer {
     name: String,
+    measurement: RefCell<Measurement>,
     terminals: [RefCell<Terminal>; 1],
 }
 
@@ -252,6 +264,7 @@ impl Component for VoltageTransformer {
     fn new(name: &str) -> VoltageTransformer {
         VoltageTransformer {
             name: name.to_string(),
+            measurement: RefCell::new(Measurement::new()),
             terminals: [RefCell::new(Terminal::new())],
         }
     }
@@ -269,6 +282,15 @@ impl Component for VoltageTransformer {
             Some(t) => Ok(t),
             None => Err(format!("Component {} of type {:?} does not have a terminal with index {}; it only has {} terminals", self.name, self.r#type(), index, self.terminals.len())),
         }
+    }
+
+    fn update(&self, value: f64) -> Result<(), String> {
+        self.measurement.borrow_mut().update(value);
+        Ok(())
+    }
+
+    fn value(&self) -> Result<f64, String> {
+        Ok(self.measurement.borrow().value())
     }
 }
 
@@ -382,7 +404,7 @@ mod tests {
     }
 
     #[test]
-    fn switchgear_openclose() {
+    fn component_openclose() {
         let (cb, ds, es, vt, tf) = create_test_components();
 
         assert!(vt.close().is_err());
@@ -402,5 +424,19 @@ mod tests {
         assert!(es.close().is_ok());
         assert!(es.close().is_err());
         assert!(es.open().is_ok());
+    }
+
+    #[test]
+    fn component_update() {
+        let (cb, ds, es, vt, tf) = create_test_components();
+
+        assert!(cb.update(0f64).is_err());
+        assert!(ds.update(0f64).is_err());
+        assert!(es.update(0f64).is_err());
+        assert!(tf.update(0f64).is_err());
+
+        assert_eq!(vt.value().unwrap(), 0.0);
+        assert!(vt.update(1578.51758).is_ok());
+        assert_eq!(vt.value().unwrap(), 1578.51758);
     }
 }
