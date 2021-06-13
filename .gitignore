@@ -2,8 +2,6 @@
 
 **/*.rs.bk
 
-/target
-
 todo
 
-/doc
+/docs/
