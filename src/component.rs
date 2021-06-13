@@ -127,21 +127,15 @@ pub trait Component {
         pos.borrow_mut().close()?;
         Ok(())
     }
-
+    
     /// Update measurement value
     fn update(&self, _value: f64) -> Result<(), String> {
-        Err(format!(
-            "Components of type {} have no measurement",
-            self.r#type()
-        ))
+        Err(format!("Components of type {} have no measurement", self.r#type()))
     }
-
+    
     /// Get measurement value
     fn value(&self) -> Result<f64, String> {
-        Err(format!(
-            "Components of type {} hve no measurement",
-            self.r#type()
-        ))
+        Err(format!("Components of type {} hve no measurement", self.r#type()))
     }
 }
 
