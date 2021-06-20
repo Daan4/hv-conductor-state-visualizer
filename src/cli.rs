@@ -259,6 +259,9 @@ fn print_help() -> Result<(), String> {
     println!("<show <name> -- Show node/component details");
     println!("<connect <node_name> <component_name> <terminal_index> -- Connect a component terminal to a node");
     println!("<disconnect <node_name> <component_name> -- Disconnect a connected component terminal and node");
+    println!("<open <switchgear_name> -- Open a closed switchgear");
+    println!("<close <switchgear_name> -- Close an open switchgear");
+    println!("<update <measurement_name> -- Update a measuremment value");
     println!("<exit -- Exit the program");
     println!("<help -- Show this help text");
     Ok(())
