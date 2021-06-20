@@ -139,7 +139,7 @@ pub trait Component {
     /// Get measurement value
     fn value(&self) -> Result<f64, String> {
         Err(format!(
-            "Components of type {} hve no measurement",
+            "Components of type {} have no measurement",
             self.r#type()
         ))
     }
