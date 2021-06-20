@@ -18,3 +18,5 @@ pub mod node;
 pub mod position;
 /// Component Terminal struct
 pub mod terminal;
+/// Save/Load Networks, Nodes and Components as json files
+pub mod json;
